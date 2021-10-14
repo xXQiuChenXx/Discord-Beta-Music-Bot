@@ -1,0 +1,28 @@
+{
+  "name": "discord-beta-music-bot",
+  "version": "1.0.0",
+  "description": "A simple discord beta music bot",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/QiuChen-Developer/Discord-Beta-Music-Bot.git"
+  },
+  "keywords": [
+    "discord",
+    "music",
+    "bot"
+  ],
+  "author": "qiuchen",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/QiuChen-Developer/Discord-Beta-Music-Bot/issues"
+  },
+  "homepage": "https://github.com/QiuChen-Developer/Discord-Beta-Music-Bot#readme",
+  "dependencies": {
+    "discord.js": "^13.2.0",
+    "dotenv": "^10.0.0"
+  }
+}
