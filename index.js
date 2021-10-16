@@ -19,7 +19,8 @@ const bot = new Client({
         Intents.FLAGS.GUILD_INVITES,
         Intents.FLAGS.GUILD_MEMBERS,
         Intents.FLAGS.GUILD_BANS,
-        Intents.FLAGS.GUILD_EMOJIS_AND_STICKERS
+        Intents.FLAGS.GUILD_EMOJIS_AND_STICKERS,
+        Intents.FLAGS.GUILD_MESSAGE_REACTIONS
     ],
     presence: {
         status: "online",
@@ -54,6 +55,19 @@ fs.readdirSync("./commands/").map(dir => {
 })
 
 bot.on('ready', () => {
+    /*
+    bot.application.commands.set([{
+        name: "play",
+        description: "Plays a song!",
+        options: [
+            {
+                name: "query",
+                type: "STRING",
+                description: "The song you want to play",
+                required: true
+            }
+        ]
+    }])*/
     console.log(`嗨, ${bot.user.username} 现在已上綫!`)
 })
 
@@ -79,5 +93,54 @@ bot.on('messageCreate', async message => {
         command.run(bot, message, args)
     }
 })
+
+
+
+const client = bot
+const { Player } = require("premium-player");
+// Create a new Player (you don't need any API Key)
+const player = new Player(client);
+const downloader = require("premium-extractor").Downloader;
+const Kristen = require("epic-extractor").Downloader;
+
+player.use("YOUTUBE_DL", downloader);
+player.use("Kristen", Kristen)
+
+// add the trackStart event so when a song will be played this message will be sent
+player.on("trackStart", (queue, track) => queue.metadata.channel.send(`🎶 | Now playing **${track.title}**!`))
+client.on("interactionCreate", async (interaction) => {
+    if (!interaction.isCommand()) return;
+
+    // /play Despacito
+    // will play "Despacito" in the voice channel
+    if (interaction.commandName === "play") {
+        if (!interaction.member.voice.channelId) return await interaction.reply({ content: "You are not in a voice channel!", ephemeral: true });
+        if (interaction.guild.me.voice.channelId && interaction.member.voice.channelId !== interaction.guild.me.voice.channelId) return await interaction.reply({ content: "You are not in my voice channel!", ephemeral: true });
+        const query = interaction.options.get("query").value;
+        const queue = player.createQueue(interaction.guild, {
+            metadata: {
+                channel: interaction.channel
+            }
+        });
+
+        // verify vc connection
+        try {
+            if (!queue.connection) await queue.connect(interaction.member.voice.channel);
+        } catch {
+            queue.destroy();
+            return await interaction.reply({ content: "Could not join your voice channel!", ephemeral: true });
+        }
+
+        await interaction.deferReply();
+        const track = await player.search(query, {
+            requestedBy: interaction.user
+        }).then(x => x.tracks[0]);
+        if (!track) return await interaction.followUp({ content: `❌ | Track **${query}** not found!` });
+
+        queue.play(track);
+
+        return await interaction.followUp({ content: `⏱️ | Loading track **${track.title}**!` });
+    }
+});
 
 bot.login(process.env.token)
